@@ -1,0 +1,23 @@
+# Data and weights (not tracked, see README)
+data/
+weights/
+results/
+predictions/
+*.pth
+*.pt
+*.safetensors
+*.h5
+*.ckpt
+
+# External dependencies cloned locally
+sam/third_party/
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+*.egg-info/
+
+# OS / editor
+.DS_Store
+.vscode/

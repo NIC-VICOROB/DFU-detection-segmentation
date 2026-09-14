@@ -1,0 +1,25 @@
+numpy
+pandas
+opencv-python
+pillow
+scipy
+pyyaml
+tqdm
+matplotlib
+
+# Detection / segmentation models
+torch
+torchvision
+ultralytics
+pycocotools
+ensemble-boxes
+nibabel          # nnDetection pseudo-3D conversion
+tensorflow       # SegNet
+
+# SAM + LoRA (see sam/README.md for the extra manual steps)
+monai
+
+# Optional, only needed for specific models (see README setup section):
+#   mmengine, mmcv, mmdet          -> Mask R-CNN
+#   segment-anything (via git)     -> SAM zero-shot inference
+#   groundingdino                  -> Grounding DINO detection

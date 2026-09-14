@@ -1,0 +1,22 @@
+# Configuration file for SAM + LoRA fine-tuning.
+# Paths are relative to the repository root unless overridden with an absolute path.
+
+DATASET:
+  # Folder containing images/ and masks/ subfolders
+  TRAIN_PATH: "data/sam/train"
+  TEST_PATH: "data/sam/test"
+  # CSV with detection bounding boxes (columns: filename, xmin, ymin, xmax, ymax[, score])
+  # Used to prompt SAM during training instead of the ground-truth mask bounding box.
+  # If a filename is not found in this CSV, the box is derived from the ground-truth mask instead.
+  BBOX_CSV: "data/sam/train_boxes.csv"
+
+SAM:
+  # Path to the official SAM ViT-B checkpoint (sam_vit_b_01ec64.pth)
+  CHECKPOINT: "weights/sam/sam_vit_b_01ec64.pth"
+  RANK: 512
+
+TRAIN:
+  BATCH_SIZE: 1
+  NUM_EPOCHS: 50
+  LR: 1e-4
+  OUTPUT_DIR: "weights/sam_lora"

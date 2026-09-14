@@ -2,20 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import PIL
 from PIL import Image
-from torchvision import datasets, transforms
-import torchvision.transforms.functional as F
 import torch
-from torch.nn.functional import pad
-import subprocess
 
 
 def show_mask(mask: np.array, ax, random_color=False):
-    """
-    Plot the mask
-
-    Arguments:
-        mask: Array of the binary mask (or float)
-    """
+    """Plot the mask"""
     if random_color:
         color = np.concatenate([np.random.random(3), np.array([0.6])], axis=0)
     else:
@@ -26,13 +17,7 @@ def show_mask(mask: np.array, ax, random_color=False):
 
 
 def plot_image_mask(image: PIL.Image, mask: PIL.Image, filename: str):
-    """
-    Plot the image and the mask superposed
-
-    Arguments:
-        image: PIL original image
-        mask: PIL original binary mask
-    """
+    """Plot the image and the mask superposed"""
     fig, axes = plt.subplots()
     axes.imshow(np.array(image))
     ground_truth_seg = np.array(mask)
@@ -41,16 +26,10 @@ def plot_image_mask(image: PIL.Image, mask: PIL.Image, filename: str):
     axes.axis("off")
     plt.savefig("./plots/" + filename + ".jpg")
     plt.close()
-    
+
 
 def plot_image_mask_dataset(dataset: torch.utils.data.Dataset, idx: int):
-    """
-    Take an image from the dataset and plot it
-
-    Arguments:
-        dataset: Dataset class loaded with our images
-        idx: Index of the data we want
-    """
+    """Take an image from the dataset and plot it"""
     image_path = dataset.img_files[idx]
     mask_path = dataset.mask_files[idx]
     image = Image.open(image_path)
@@ -59,92 +38,15 @@ def plot_image_mask_dataset(dataset: torch.utils.data.Dataset, idx: int):
     plot_image_mask(image, mask)
 
 
-def get_bounding_box(ground_truth_map: np.array) -> list:
-    """
-    Get the bounding box of the image with the ground truth mask
-
-    Arguments:
-        ground_truth_map: Take ground truth mask in array format
-
-    Return:
-        bbox: Bounding box of the mask [X, Y, X, Y]
-    """
-    # get bounding box from mask
-    idx = np.where(ground_truth_map > 0)
-
-    # caso máscara totalmente negra
-    if idx[0].size == 0 or idx[1].size == 0:
-        return [0, 0, 0, 0]
-
-    x_indices = idx[1]
-    y_indices = idx[0]
-
-    x_min, x_max = np.min(x_indices), np.max(x_indices)
-    y_min, y_max = np.min(y_indices), np.max(y_indices)
-
-    # add perturbation to bounding box coordinates
-    H, W = ground_truth_map.shape
-    x_min = max(0, x_min - np.random.randint(0, 20))
-    x_max = min(W, x_max + np.random.randint(0, 20))
-    y_min = max(0, y_min - np.random.randint(0, 20))
-    y_max = min(H, y_max + np.random.randint(0, 20))
-
-    bbox = [x_min, y_min, x_max, y_max]
-    return bbox
-
-
 def stacking_batch(batch, outputs):
     """
-    Given the batch and outputs of SAM, stacks the tensors to compute the loss. We stack by adding another dimension.
+    Stacks the batch ground-truth masks and SAM's low_res_logits outputs to compute the loss.
 
-    Arguments:
-        batch(list(dict)): List of dict with the keys given in the dataset file
-        outputs: list(dict): List of dict that are the outputs of SAM
-    
-    Return: 
-        stk_gt: Stacked tensor of the ground truth masks in the batch. Shape: [batch_size, H, W] -> We will need to add the channels dimension (dim=1)
-        stk_out: Stacked tensor of logits mask outputed by SAM. Shape: [batch_size, 1, 1, H, W] -> We will need to remove the extra dimension (dim=1) needed by SAM 
+    Return:
+        stk_gt: [batch_size, H, W]
+        stk_out: [batch_size, 1, 1, H, W]
     """
     stk_gt = torch.stack([b["ground_truth_mask"] for b in batch], dim=0)
     stk_out = torch.stack([out["low_res_logits"] for out in outputs], dim=0)
-        
+
     return stk_gt, stk_out
-
-
-
-def get_gpu_usage():
-    """
-    Obtiene el uso de memoria de las GPUs disponibles.
-
-    Returns:
-        List[Tuple[int, int, int, int]]: Una lista de tuplas con el índice de la GPU, 
-        memoria utilizada, memoria libre y memoria total en MB.
-    """
-    try:
-        output = subprocess.check_output(
-            ["nvidia-smi", "--query-gpu=index,memory.used,memory.free,memory.total", "--format=csv,noheader,nounits"]
-        )
-        gpu_usage = [line.split(',') for line in output.decode('utf-8').strip().split('\n')]
-        return [(int(index), int(used), int(free), int(total)) for index, used, free, total in gpu_usage]
-    except subprocess.CalledProcessError as e:
-        print("Error al ejecutar nvidia-smi:", e)
-        return []
-
-def get_least_used_gpu():
-    """
-    Encuentra el índice de la GPU con menos memoria utilizada.
-
-    Returns:
-        int: Índice de la GPU con menos memoria utilizada, o -1 si no se encontró ninguna.
-    """
-    gpu_usage = get_gpu_usage()
-    least_used_index = -1
-    least_memory_used = float('inf')
-
-    for index, used, free, total in gpu_usage:
-        print(f"GPU {index}: Memoria Utilizada: {used} MB, Memoria Libre: {free} MB, Memoria Total: {total} MB")
-        if used < least_memory_used:
-            least_memory_used = used
-            least_used_index = index
-            
-    return least_used_index
