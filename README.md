@@ -8,6 +8,20 @@ DFUC2020, DFUC2022, DFUC2024 and FUSeg.
 Accompanies the paper *"Detection-Guided Segmentation of Diabetic Foot Ulcers Using
 Foundation Models: A Comprehensive Benchmark and Analysis"*.
 
+## How it works
+
+![Pipeline overview](docs/figures/pipeline_overview.png)
+
+A detector (YOLO-det, Faster R-CNN, nnDetection, Grounding DINO) or a segmentation
+model (nnUNet, SegNet, YOLO-seg, Mask R-CNN) localises the ulcer with a bounding box,
+which prompts SAM (LoRA fine-tuned) to produce the final mask. Predictions from the
+two best-performing pipelines are combined with OR / AND / priority-based ensembling.
+
+![Qualitative results](docs/figures/qualitative_results.png)
+
+Example predictions across four cases: nnUNet, YOLO-seg, nnDetection+SAM, and the
+priority-based ensemble, against the ground truth.
+
 ## Repository structure
 configs/ Model configs (e.g. Mask R-CNN, via mmdetection)
 detection/ Detection models: YOLO, Faster R-CNN, nnDetection, Grounding DINO + WBF/NMS ensemble
